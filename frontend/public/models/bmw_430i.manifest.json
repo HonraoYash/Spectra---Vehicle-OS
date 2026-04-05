@@ -1,0 +1,22 @@
+{
+  "modelFile": "2021_bmw_430i_xdrive_coupe_4-series.glb",
+  "notes": "Mesh names from pygltflib inspection (Phase 0). Tune in Phase 4 if emissive hotspots need splitting.",
+  "paintMeshes": [
+    "Mesh25_CarPaint_0",
+    "Mesh28_CarPaint_0"
+  ],
+  "brakeLightMeshes": [
+    "Mesh10_M_2021_BMW_M430i_Coupe_BrakeLights_Glass_0",
+    "Mesh37_red_glass_0",
+    "Mesh37_Light_glass_0"
+  ],
+  "headlightMeshes": [
+    "Mesh36_M_2021_BMW_M430i_Coupe_HeadLights1_0",
+    "Mesh35_Light_glass_0",
+    "Mesh36_front_GL_0",
+    "Mesh13_Light_Emiss_0",
+    "Mesh14_Light_Emiss_0",
+    "l:_shell282light_Fgroup1_front_GL_0"
+  ],
+  "paintPaletteLabels": ["Phantom Black", "Metallic Blue", "Alpine White", "Mineral Gray"]
+}
