@@ -19,7 +19,7 @@ from app.state import VehicleStore
 
 
 def _cors_origins() -> list[str]:
-    raw = os.environ.get("CORS_ORIGINS", "http://localhost:5173")
+    raw = os.environ.get("CORS_ORIGINS", "https://spectra-vehicle-os.onrender.com/")
     return [o.strip() for o in raw.split(",") if o.strip()]
 
 

@@ -33,8 +33,8 @@ sequenceDiagram
 
 ```text
 Spectra/
-├── vercel.json               # Optional: Vercel build from repo root → frontend/dist
-├── frontend/                 # Vite React app
+├── frontend/                 # Vite React app (Vercel Root Directory → this folder)
+│   ├── vercel.json           # Vite build: dist/, no nested --prefix
 │   ├── .env.example          # VITE_* API / WebSocket (see Vercel section)
 │   ├── public/models/         # Vehicle GLB + optional manifest JSON
 │   └── src/
@@ -201,7 +201,7 @@ Optional:
 
 1. Push this repo to GitHub (or GitLab / Bitbucket).
 2. In [Vercel](https://vercel.com), **Add New… → Project**, import the repository.
-3. Vercel will pick up the root [`vercel.json`](vercel.json): install and build run against `./frontend`, output is `frontend/dist`.
+3. Under **Settings → General → Root Directory**, set **`frontend`**. The app’s [`frontend/vercel.json`](frontend/vercel.json) runs `npm install` / `npm run build` there and publishes **`dist`**. (Do **not** combine Root Directory `frontend` with an install command like `npm install --prefix ./frontend` — that looks for `frontend/frontend/package.json` and fails.)
 4. Add the environment variables above, then deploy.
 5. Copy the deployment URL (e.g. `https://spectra-xxx.vercel.app`) and append it to **`CORS_ORIGINS`** on the backend; redeploy the API if needed.
 
@@ -224,9 +224,9 @@ Optional:
 - Pages on `https://…` must call an **`https://`** API and a **`wss://`** WebSocket. If the UI loads over HTTPS but the bundle still points at `http://localhost:8000`, the browser will block requests or the socket.
 - If the WebSocket fails while REST works, check proxy/WebSocket upgrade support on the API host.
 
-#### Optional: Vercel root directory instead of `vercel.json`
+#### Deploying from the repo root (no Root Directory)
 
-If you prefer, delete or ignore root `vercel.json`, set **Root Directory** in the Vercel project to **`frontend`**, and use default **Build Command** `npm run build` and **Output Directory** `dist`. Add the same `VITE_*` variables in the dashboard.
+If you leave Root Directory empty, add a root `vercel.json` with `installCommand` / `buildCommand` using `npm install --prefix ./frontend` and `outputDirectory: "frontend/dist"`. The supported setup in this repo is **Root Directory = `frontend`** plus [`frontend/vercel.json`](frontend/vercel.json).
 
 ## Troubleshooting
 
