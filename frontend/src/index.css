@@ -1,0 +1,81 @@
+/**
+ * Jarvis-style theme tokens — deep space panel UI with electric accents.
+ * Phase 3+ layers (3D canvas, glass panels) build on these variables.
+ */
+:root {
+  /* Surfaces */
+  --spectra-bg-deep: #050810;
+  --spectra-bg-panel: rgba(10, 16, 32, 0.72);
+  --spectra-bg-elevated: rgba(14, 22, 44, 0.88);
+
+  /* Accents */
+  --spectra-accent: #00d4ff;
+  --spectra-accent-dim: rgba(0, 212, 255, 0.35);
+  --spectra-glow-magenta: #ff00aa;
+  --spectra-glow-magenta-dim: rgba(255, 0, 170, 0.25);
+
+  /* Text */
+  --spectra-text-primary: #e8f4ff;
+  --spectra-text-muted: rgba(232, 244, 255, 0.55);
+  --spectra-text-dim: rgba(232, 244, 255, 0.35);
+
+  /* Lines & chrome */
+  --chrome-line: rgba(0, 212, 255, 0.4);
+  --chrome-corner: rgba(0, 212, 255, 0.65);
+
+  /* Status */
+  --spectra-ok: #2ee59b;
+  --spectra-warn: #ffc14a;
+  --spectra-error: #ff4d6d;
+
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  height: 100%;
+}
+
+body {
+  background: var(--spectra-bg-deep);
+  background-image:
+    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(0, 212, 255, 0.08), transparent 50%),
+    linear-gradient(180deg, #0a1020 0%, var(--spectra-bg-deep) 45%, #04060c 100%);
+  color: var(--spectra-text-primary);
+}
+
+/* Optional subtle scanline overlay — low contrast so it stays tasteful */
+.spectra-scanlines::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 3px
+  );
+  opacity: 0.5;
+  z-index: 9999;
+}
+
+.spectra-mono {
+  font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
