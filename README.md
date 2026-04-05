@@ -7,7 +7,7 @@
 - **Interactive 3D stage** — GLB vehicle loaded with React Three Fiber, cinematic lighting, tone mapping, orbit controls, and idle auto-rotate after periods without interaction.
 - **Live control panel** — Headlights, brake lights, and paint selection (or cycle) with a neon / glass-morphism aesthetic.
 - **Real-time sync** — WebSocket channel pushes `{ type: "vehicle_state", data: ... }` after each successful REST update; reconnect with exponential backoff.
-- **Split deployment ready** — Frontend static build talks to a separate API origin via `VITE_API_BASE_URL` and `VITE_WS_URL`; CORS configured on the backend.
+- **Split deployment ready** — Frontend static build talks to a separate API origin via `VITE_API_BASE_URL` (or alias `VITE_API_URL`); optional `VITE_WS_URL` or auto-derived `wss://<api-host>/ws/vehicle`. CORS on the backend must allow your static origin.
 
 ## Architecture
 
@@ -33,8 +33,9 @@ sequenceDiagram
 
 ```text
 Spectra/
+├── vercel.json               # Optional: Vercel build from repo root → frontend/dist
 ├── frontend/                 # Vite React app
-│   ├── .env.example          # VITE_API_BASE_URL, VITE_WS_URL
+│   ├── .env.example          # VITE_* API / WebSocket (see Vercel section)
 │   ├── public/models/         # Vehicle GLB + optional manifest JSON
 │   └── src/
 │       ├── api/              # REST client (vehicleClient.ts)
@@ -100,10 +101,11 @@ Open the URL Vite prints (default **http://localhost:5173**). The app needs both
 
 | Variable | Description |
 | -------- | ----------- |
-| `VITE_API_BASE_URL` | REST origin, **no trailing slash** (e.g. `http://localhost:8000`). Required at build time for Vite. |
-| `VITE_WS_URL` | Full WebSocket URL including path (e.g. `ws://localhost:8000/ws/vehicle`). Use `wss://` when the page is served over HTTPS. |
+| `VITE_API_BASE_URL` | REST origin, **no trailing slash** (e.g. `http://localhost:8000`). Required at build time unless you set `VITE_API_URL`. |
+| `VITE_API_URL` | **Alias** for `VITE_API_BASE_URL` (e.g. single env var on Vercel named `VITE_API_URL`). |
+| `VITE_WS_URL` | Optional. Full WebSocket URL (e.g. `wss://api.example.com/ws/vehicle`). If omitted, the app uses `wss://<same host as API>/ws/vehicle` derived from the API origin (or `ws://` for `http://` APIs). |
 
-Copy from `frontend/.env.example`. After changing these for production, **rebuild** the frontend so values are embedded in the bundle.
+Copy from `frontend/.env.example`. Vite inlines `VITE_*` at **build** time — change production URLs, then **rebuild** (or trigger a new Vercel deployment).
 
 ### Backend (`backend/.env` or shell env)
 
@@ -174,16 +176,64 @@ Commercial GLBs often have inconsistent naming; adjust bindings or the manifest 
 
 ## Production deployment (split host)
 
-1. Deploy the **backend** with Uvicorn (or a process manager) on a reachable host; set `CORS_ORIGINS` to your static site origin(s); ensure proxies allow **WebSocket upgrades** if TLS terminates in front of the app.
-2. Set frontend env to **HTTPS** API base and **`wss://`** WebSocket URL, then `npm run build` and deploy the `frontend/dist` output to your static host.
+1. Deploy the **backend** with Uvicorn (or a process manager) on a reachable **HTTPS** URL (e.g. [Railway](https://railway.app), Fly.io, a VPS). Set `CORS_ORIGINS` to include your **Vercel site origin** exactly (no path), e.g. `https://spectra-xyz.vercel.app`. Ensure the host/proxy allows **WebSocket upgrades** (`Upgrade: websocket`) — otherwise REST may work while the live state stream fails.
+2. Build the frontend with production `VITE_*` values (see below). Deploy the `frontend/dist` output (Vercel does this automatically when connected to Git).
 3. Keep **one worker** per logical state store unless you introduce shared persistence / pub-sub.
+
+### Deploying the frontend on Vercel
+
+Vercel only hosts the **static** Vite build. Your FastAPI app must already be live on another URL; the browser will call that URL for REST and WebSocket.
+
+#### Environment variables on Vercel
+
+Add **at least one** of these in the Vercel project → **Settings** → **Environment Variables** (apply to *Production* and *Preview* as needed):
+
+- **`VITE_API_BASE_URL`** — public API origin, no trailing slash, e.g. `https://your-service.up.railway.app`
+- **or `VITE_API_URL`** — same value; use whichever naming you prefer (the code treats it as an alias for the REST base).
+
+Optional:
+
+- **`VITE_WS_URL`** — only if the WebSocket is **not** at `wss://<same host as API>/ws/vehicle`. Otherwise omit it; the app will derive `wss://` from an `https://` API base automatically.
+
+**Important:** `VITE_*` variables are read when `npm run build` runs. After changing them in Vercel, trigger **Redeploy** so the new bundle is produced.
+
+#### Option A — Git integration (recommended)
+
+1. Push this repo to GitHub (or GitLab / Bitbucket).
+2. In [Vercel](https://vercel.com), **Add New… → Project**, import the repository.
+3. Vercel will pick up the root [`vercel.json`](vercel.json): install and build run against `./frontend`, output is `frontend/dist`.
+4. Add the environment variables above, then deploy.
+5. Copy the deployment URL (e.g. `https://spectra-xxx.vercel.app`) and append it to **`CORS_ORIGINS`** on the backend; redeploy the API if needed.
+
+#### Option B — Drag and drop `dist/`
+
+1. On your machine, point the build at your real API (HTTPS), then build:
+
+   ```bash
+   cd frontend
+   export VITE_API_BASE_URL=https://your-api.example.com
+   # optional: export VITE_WS_URL=wss://...
+   npm ci && npm run build
+   ```
+
+2. Open Vercel → **Add New… → Project** (or the dashboard area for static uploads) and **drag the `frontend/dist` folder** onto the upload target.
+3. You get a URL immediately. You must **rebuild locally** with the correct `VITE_*` values whenever the API URL changes (drag-and-drop does not run Vercel’s env UI for that folder).
+
+#### Mixed content and WebSockets
+
+- Pages on `https://…` must call an **`https://`** API and a **`wss://`** WebSocket. If the UI loads over HTTPS but the bundle still points at `http://localhost:8000`, the browser will block requests or the socket.
+- If the WebSocket fails while REST works, check proxy/WebSocket upgrade support on the API host.
+
+#### Optional: Vercel root directory instead of `vercel.json`
+
+If you prefer, delete or ignore root `vercel.json`, set **Root Directory** in the Vercel project to **`frontend`**, and use default **Build Command** `npm run build` and **Output Directory** `dist`. Add the same `VITE_*` variables in the dashboard.
 
 ## Troubleshooting
 
 | Symptom | Things to check |
 | ------- | ---------------- |
-| Frontend throws on load about `VITE_API_BASE_URL` / `VITE_WS_URL` | Create `frontend/.env` from `.env.example`; restart `npm run dev`. |
-| REST works but WebSocket never connects | Wrong `VITE_WS_URL`, firewall, or proxy blocking Upgrade; use `wss://` for HTTPS pages. |
+| Frontend throws about API / WebSocket env | Set `VITE_API_BASE_URL` or `VITE_API_URL`; optionally `VITE_WS_URL`. Locally: `frontend/.env`. On Vercel: Project → Environment Variables, then redeploy. |
+| REST works but WebSocket never connects | Wrong explicit `VITE_WS_URL`, firewall, or proxy blocking Upgrade; for HTTPS sites use `https://` API base so `wss://` can be derived, or set `VITE_WS_URL` to a working `wss://` URL. |
 | CORS errors on fetch | Add your exact dev origin (including `127.0.0.1` vs `localhost`) to `CORS_ORIGINS`. |
 | Paint or lights look wrong | Mesh names changed in the GLB; re-run `inspect_glb.py` and update `vehicleBindings.ts` / manifest. |
 | State differs per tab after toggle | Multiple backend workers or instances; use a single worker or externalize state. |

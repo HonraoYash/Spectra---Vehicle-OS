@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { getVehicleWsUrl } from '../env'
 import type { VehicleState } from '../types/vehicle'
 import { isVehicleStateMessage } from '../types/vehicle'
 
@@ -53,10 +54,12 @@ export function useVehicleChannel(): UseVehicleChannelResult {
     function connect() {
       if (cancelledRef.current) return
 
-      const url = import.meta.env.VITE_WS_URL?.trim()
-      if (!url) {
+      let url: string
+      try {
+        url = getVehicleWsUrl()
+      } catch (e) {
         setStatus('error')
-        setLastError('VITE_WS_URL is not set')
+        setLastError(e instanceof Error ? e.message : 'WebSocket URL not configured')
         return
       }
 

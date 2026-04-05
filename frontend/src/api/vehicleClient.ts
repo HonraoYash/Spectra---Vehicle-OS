@@ -1,3 +1,4 @@
+import { getApiBase } from '../env'
 import type {
   BrakeLightsPatch,
   HeadlightsPatch,
@@ -15,14 +16,6 @@ export class VehicleApiError extends Error {
   }
 }
 
-function requireApiBase(): string {
-  const raw = import.meta.env.VITE_API_BASE_URL
-  if (!raw) {
-    throw new Error('VITE_API_BASE_URL is not set')
-  }
-  return raw.replace(/\/$/, '')
-}
-
 async function parseJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text().catch(() => '')
@@ -32,7 +25,7 @@ async function parseJson<T>(res: Response): Promise<T> {
 }
 
 async function patchJson<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${requireApiBase()}${path}`, {
+  const res = await fetch(`${getApiBase()}${path}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -42,12 +35,12 @@ async function patchJson<T>(path: string, body: unknown): Promise<T> {
 
 /** Lightweight health probe for monitors and dev sanity checks. */
 export async function getHealth(): Promise<{ status: string }> {
-  const res = await fetch(`${requireApiBase()}/api/health`)
+  const res = await fetch(`${getApiBase()}/api/health`)
   return parseJson(res)
 }
 
 export async function getVehicleState(): Promise<VehicleState> {
-  const res = await fetch(`${requireApiBase()}/api/vehicle`)
+  const res = await fetch(`${getApiBase()}/api/vehicle`)
   return parseJson(res)
 }
 
@@ -64,7 +57,7 @@ export function patchPaint(body: PaintPatch): Promise<VehicleState> {
 }
 
 export async function postPaintCycle(): Promise<VehicleState> {
-  const res = await fetch(`${requireApiBase()}/api/vehicle/paint/cycle`, {
+  const res = await fetch(`${getApiBase()}/api/vehicle/paint/cycle`, {
     method: 'POST',
     headers: { Accept: 'application/json' },
   })
