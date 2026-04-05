@@ -9,8 +9,11 @@ import {
 import { StageControls } from '../scene/controls'
 import { StageLighting } from '../scene/lighting'
 import { VehicleModel } from '../scene/VehicleModel'
+import { type VehicleState, resolveVehicleState } from '../types/vehicle'
 
 export type VehicleStageProps = {
+  /** Live state from WS; when null, defaults match the API until the first message. */
+  vehicleState: VehicleState | null
   className?: string
   style?: CSSProperties
 }
@@ -18,7 +21,8 @@ export type VehicleStageProps = {
 /**
  * Full-width R3F canvas: cinematic tone mapping, environment lighting, fitted GLB, orbit + idle spin.
  */
-export function VehicleStage({ className, style }: VehicleStageProps) {
+export function VehicleStage({ vehicleState, className, style }: VehicleStageProps) {
+  const v = resolveVehicleState(vehicleState)
   return (
     <div
       className={className}
@@ -50,7 +54,11 @@ export function VehicleStage({ className, style }: VehicleStageProps) {
         <Suspense fallback={null}>
           <StageLighting />
           <Bounds fit clip observe margin={1.22} maxDuration={0.38}>
-            <VehicleModel />
+            <VehicleModel
+              headlights_on={v.headlights_on}
+              brake_lights_on={v.brake_lights_on}
+              paint_index={v.paint_index}
+            />
           </Bounds>
           <StageControls />
         </Suspense>

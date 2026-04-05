@@ -6,6 +6,17 @@ export interface VehicleState {
   paint_index: number
 }
 
+/** Matches `VehicleState` defaults in `app.schemas` when WebSocket has not delivered yet. */
+export const DEFAULT_VEHICLE_STATE: VehicleState = {
+  headlights_on: false,
+  brake_lights_on: false,
+  paint_index: 0,
+}
+
+export function resolveVehicleState(state: VehicleState | null): VehicleState {
+  return state ?? DEFAULT_VEHICLE_STATE
+}
+
 export interface HeadlightsPatch {
   on: boolean
 }

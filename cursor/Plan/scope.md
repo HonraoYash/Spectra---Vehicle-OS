@@ -8,7 +8,7 @@
 - [x] **Phase 1 — Backend (Completed):** FastAPI: in-memory state, REST mutations, WS broadcast, CORS from env, health route
 - [x] **Phase 2 — Frontend foundation (Completed):** Vite+React+TS: Jarvis theme CSS, REST client, WebSocket hook with reconnect
 - [x] **Phase 3 — R3F scene (Completed):** GLTF load, cinematic lights/tone mapping, OrbitControls + idle auto-rotate
-- [ ] **Phase 4 — Visual state:** Bind headlights/brake/paint to materials and optional auxiliary lights
+- [x] **Phase 4 — Visual state (Completed):** Bind headlights/brake/paint to materials and optional auxiliary lights
 - [ ] **Phase 5 — Panel:** ControlPanel with glow toggles, live state from WS, REST on user action
 - [ ] **Phase 6 — Split deploy:** Env examples: `VITE_API_BASE_URL`, `VITE_WS_URL`, `CORS_ORIGINS`; document `wss` + single-worker constraint
 
@@ -191,7 +191,7 @@ If names are unusable, fallback: maintain a **JSON manifest** checked into `publ
 - `VehicleStage` + `VehicleModel` load GLB, default camera framing (`Bounds` from drei or manual `fit`).
 - Lighting + tone mapping + OrbitControls + idle auto-rotate behavior.
 
-### Phase 4 — Visual controls
+### Phase 4 — Visual controls (completed)
 
 - Wire state to materials/lights per bindings; smooth transitions optional (`lerp` emissive intensity in `useFrame`).
 

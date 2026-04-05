@@ -63,7 +63,7 @@ export default function App() {
             Spectra
           </h1>
           <p style={{ margin: 0, color: 'var(--spectra-text-muted)', fontSize: '0.9rem' }}>
-            Phase 3 — R3F scene (GLTF, cinematic lighting, orbit + idle auto-rotate)
+            Phase 4 — Visual state (materials + auxiliary lights, smoothed emissive)
           </p>
         </header>
 
@@ -77,7 +77,7 @@ export default function App() {
             alignItems: 'stretch',
           }}
         >
-          <VehicleStage style={{ minHeight: 0 }} />
+          <VehicleStage vehicleState={state} style={{ minHeight: 0 }} />
 
           <div
             style={{

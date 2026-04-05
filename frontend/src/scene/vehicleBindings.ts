@@ -28,6 +28,46 @@ export const PAINT_PALETTE = [
 
 export const PAINT_LABELS = vehicleManifest.paintPaletteLabels.slice(0, PAINT_PALETTE.length)
 
+/** Emissive + aux light tuning (Phase 4). */
+export const EMISSIVE_LERP_SPEED = 12
+
+export const HEADLIGHT_EMISSIVE_HEX = 0xfff2dd as const
+export const HEADLIGHT_EMISSIVE_INTENSITY_ON = 2.35
+
+export const BRAKE_EMISSIVE_HEX = 0xff2828 as const
+export const BRAKE_EMISSIVE_INTENSITY_ON = 3.1
+
+/**
+ * Model-local auxiliary spots (nose toward +Z). Intensity scaled by smoothed headlight factor in scene.
+ */
+export const AUX_HEADLIGHT_SPOTS = [
+  {
+    position: [0.78, 0.52, 1.92] as const,
+    intensityScale: 1,
+    angle: 0.52,
+    penumbra: 0.52,
+    distance: 15,
+    color: '#fff4e8' as const,
+  },
+  {
+    position: [-0.78, 0.52, 1.92] as const,
+    intensityScale: 1,
+    angle: 0.52,
+    penumbra: 0.52,
+    distance: 15,
+    color: '#fff4e8' as const,
+  },
+] as const
+
+/** Rear glow in model space (tail toward -Z). */
+export const AUX_BRAKE_POINT = {
+  position: [0, 0.72, -2.08] as const,
+  intensityScale: 1,
+  distance: 5.5,
+  decay: 2,
+  color: '#ff5555' as const,
+} as const
+
 const nameSet = (names: readonly string[]) => new Set(names)
 
 const paintNames = nameSet(vehicleManifest.paintMeshes)
