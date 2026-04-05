@@ -1,13 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
-import {
-  VehicleApiError,
-  getHealth,
-  getVehicleState,
-  patchBrakeLights,
-  patchHeadlights,
-  postPaintCycle,
-} from '../api/vehicleClient'
 import type { VehicleChannelStatus } from '../hooks/useVehicleChannel'
+import { useVehicleActions } from '../hooks/useVehicleActions'
 import type { VehicleState } from '../types/vehicle'
 import { PAINT_LABELS } from '../scene/vehicleBindings'
 import { GlowToggle } from './ui/GlowToggle'
@@ -38,64 +30,15 @@ function statusColor(status: string) {
   }
 }
 
-type PendingAction = 'headlights' | 'brake' | 'paint'
-
 export function ControlPanel({ state, status, lastError, retryCount }: ControlPanelProps) {
-  const [apiHealth, setApiHealth] = useState<'ok' | 'err' | 'pending'>('pending')
-  const [pending, setPending] = useState<PendingAction | null>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let alive = true
-    getHealth()
-      .then(() => {
-        if (alive) setApiHealth('ok')
-      })
-      .catch(() => {
-        if (alive) setApiHealth('err')
-      })
-    return () => {
-      alive = false
-    }
-  }, [])
-
-  const controlsLocked = state === null || status !== 'open' || pending !== null
-
-  const runMutation = useCallback(async (key: PendingAction, fn: () => Promise<unknown>) => {
-    if (!state || status !== 'open') return
-    setPending(key)
-    setActionError(null)
-    try {
-      await fn()
-    } catch (e) {
-      const msg =
-        e instanceof VehicleApiError
-          ? e.message || `HTTP ${e.status}`
-          : e instanceof Error
-            ? e.message
-            : 'Request failed'
-      setActionError(msg)
-      try {
-        await getVehicleState()
-      } catch {
-        /* WS remains authoritative when GET fails */
-      }
-    } finally {
-      setPending(null)
-    }
-  }, [state, status])
-
-  const onHeadlights = (on: boolean) => {
-    void runMutation('headlights', () => patchHeadlights({ on }))
-  }
-
-  const onBrake = (on: boolean) => {
-    void runMutation('brake', () => patchBrakeLights({ on }))
-  }
-
-  const onCyclePaint = () => {
-    void runMutation('paint', () => postPaintCycle())
-  }
+  const {
+    apiHealth,
+    actionError,
+    controlsLocked,
+    onHeadlights,
+    onBrake,
+    onCyclePaint,
+  } = useVehicleActions(state, status)
 
   return (
     <div

@@ -1,5 +1,6 @@
 import { Bounds } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
+import type { ReactNode } from 'react'
 import type { CSSProperties } from 'react'
 import { Suspense, useCallback, useRef } from 'react'
 import {
@@ -16,12 +17,14 @@ export type VehicleStageProps = {
   vehicleState: VehicleState | null
   className?: string
   style?: CSSProperties
+  /** HUD / chrome layered above the canvas (use pointer-events on children as needed). */
+  overlay?: ReactNode
 }
 
 /**
  * Full-width R3F canvas: cinematic tone mapping, environment lighting, fitted GLB, orbit + idle spin.
  */
-export function VehicleStage({ vehicleState, className, style }: VehicleStageProps) {
+export function VehicleStage({ vehicleState, className, style, overlay }: VehicleStageProps) {
   const v = resolveVehicleState(vehicleState)
   const zoomRef = useRef<StageZoomApi>({
     zoomIn: () => {},
@@ -40,9 +43,9 @@ export function VehicleStage({ vehicleState, className, style }: VehicleStagePro
         position: 'relative',
         width: '100%',
         height: '100%',
-        minHeight: 'min(62vh, 580px)',
+        minHeight: 'min(72vh, 720px)',
         border: '1px solid var(--chrome-line)',
-        borderRadius: 6,
+        borderRadius: 2,
         overflow: 'hidden',
         background: 'linear-gradient(165deg, #070d18 0%, #050810 55%, #04060e 100%)',
         boxShadow:
@@ -77,13 +80,26 @@ export function VehicleStage({ vehicleState, className, style }: VehicleStagePro
         </Suspense>
       </Canvas>
 
+      {overlay ? (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 2,
+            pointerEvents: 'none',
+          }}
+        >
+          {overlay}
+        </div>
+      ) : null}
+
       <div
         className="spectra-mono"
         style={{
           position: 'absolute',
           right: 10,
-          bottom: 10,
-          zIndex: 3,
+          bottom: 56,
+          zIndex: 4,
           display: 'flex',
           flexDirection: 'column',
           gap: 6,
@@ -93,37 +109,35 @@ export function VehicleStage({ vehicleState, className, style }: VehicleStagePro
       >
         <button
           type="button"
-          className="spectra-zoom-btn"
+          className="spectra-zoom-btn spectra-zoom-btn--hud"
           aria-label="Zoom in"
           onClick={() => zoomRef.current.zoomIn()}
           style={{
-            width: 38,
-            height: 38,
-            borderRadius: 4,
+            width: 40,
+            height: 40,
             border: '1px solid var(--chrome-corner)',
             background: 'rgba(10, 16, 32, 0.88)',
             color: 'var(--spectra-accent)',
-            fontSize: '1.2rem',
+            fontSize: '1.15rem',
             lineHeight: 1,
             cursor: 'pointer',
-            boxShadow: '0 0 12px rgba(0, 212, 255, 0.2)',
+            boxShadow: '0 0 14px rgba(0, 212, 255, 0.22)',
           }}
         >
           +
         </button>
         <button
           type="button"
-          className="spectra-zoom-btn"
+          className="spectra-zoom-btn spectra-zoom-btn--hud"
           aria-label="Zoom out"
           onClick={() => zoomRef.current.zoomOut()}
           style={{
-            width: 38,
-            height: 38,
-            borderRadius: 4,
+            width: 40,
+            height: 40,
             border: '1px solid var(--chrome-line)',
             background: 'rgba(10, 16, 32, 0.88)',
             color: 'var(--spectra-text-primary)',
-            fontSize: '1.2rem',
+            fontSize: '1.15rem',
             lineHeight: 1,
             cursor: 'pointer',
           }}

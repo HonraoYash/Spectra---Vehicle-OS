@@ -1,50 +1,47 @@
 import { JarvisShell } from './components/layout/JarvisShell'
-import { ControlPanel } from './components/ControlPanel'
+import { VehicleHudOverlay } from './components/hud/VehicleHudOverlay'
 import { VehicleStage } from './components/VehicleStage'
+import { useVehicleActions } from './hooks/useVehicleActions'
 import { useVehicleChannel } from './hooks/useVehicleChannel'
 
 export default function App() {
   const { state, status, lastError, retryCount } = useVehicleChannel()
+  const hud = useVehicleActions(state, status)
 
   return (
     <JarvisShell scanlines>
       <div
         style={{
-          minHeight: '100%',
-          padding: '1.5rem',
+          height: '100%',
+          minHeight: 0,
+          padding: '0.65rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1.25rem',
+          boxSizing: 'border-box',
         }}
       >
-        <header
-          style={{
-            borderLeft: '3px solid var(--chrome-corner)',
-            paddingLeft: '1rem',
-          }}
-        >
-          <h1 style={{ margin: '0 0 0.35rem', fontWeight: 600, fontSize: '1.25rem' }}>
-            Spectra
-          </h1>
-          <p style={{ margin: 0, color: 'var(--spectra-text-muted)', fontSize: '0.9rem' }}>
-            Phase 5 — Control panel (REST actions, WebSocket state, 3D sync)
-          </p>
-        </header>
-
-        <div
+        <VehicleStage
+          vehicleState={state}
           style={{
             flex: 1,
             minHeight: 0,
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) minmax(16rem, 22rem)',
-            gap: '1.25rem',
-            alignItems: 'stretch',
+            width: '100%',
           }}
-        >
-          <VehicleStage vehicleState={state} style={{ minHeight: 0 }} />
-
-          <ControlPanel state={state} status={status} lastError={lastError} retryCount={retryCount} />
-        </div>
+          overlay={
+            <VehicleHudOverlay
+              state={state}
+              status={status}
+              lastError={lastError}
+              retryCount={retryCount}
+              apiHealth={hud.apiHealth}
+              actionError={hud.actionError}
+              controlsLocked={hud.controlsLocked}
+              onHeadlights={hud.onHeadlights}
+              onBrake={hud.onBrake}
+              onSetPaint={hud.onSetPaint}
+            />
+          }
+        />
       </div>
     </JarvisShell>
   )

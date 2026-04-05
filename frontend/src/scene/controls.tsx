@@ -102,8 +102,12 @@ export function StageControls({ onZoomApi }: StageControlsProps) {
       /** Orbit radius vs target — low values allow detail inspection of body/panels; ~0.02 ≈ 2cm in meter-scaled GLBs */
       minDistance={0.02}
       maxDistance={260}
-      minPolarAngle={0.12}
-      maxPolarAngle={Math.PI * 0.485}
+      /**
+       * Polar angle is measured from +Y (zenith). π/2 ≈ horizon; π ≈ looking up from below the target.
+       * Previously max was ~0.49π (~87°), which blocked horizon-level and underbody views.
+       */
+      minPolarAngle={0.02}
+      maxPolarAngle={Math.PI - 0.04}
       autoRotate={autoRotate}
       autoRotateSpeed={0.42}
       enableZoom
