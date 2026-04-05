@@ -10,7 +10,7 @@
 - [x] **Phase 3 — R3F scene (Completed):** GLTF load, cinematic lights/tone mapping, OrbitControls + idle auto-rotate
 - [x] **Phase 4 — Visual state (Completed):** Bind headlights/brake/paint to materials and optional auxiliary lights
 - [x] **Phase 5 — Panel (Completed):** ControlPanel with glow toggles, live state from WS, REST on user action
-- [ ] **Phase 6 — Split deploy:** Env examples: `VITE_API_BASE_URL`, `VITE_WS_URL`, `CORS_ORIGINS`; document `wss` + single-worker constraint
+- [x] **Phase 6 — Split deploy (Completed):** Env examples: `VITE_API_BASE_URL`, `VITE_WS_URL`, `CORS_ORIGINS`; document `wss` + single-worker constraint
 
 ---
 
@@ -200,9 +200,9 @@ If names are unusable, fallback: maintain a **JSON manifest** checked into `publ
 - Panel toggles → REST → WS → scene + readout.
 - Open two browser tabs: toggle in one, verify the other updates.
 
-### Phase 6 — Split deploy hardening
+### Phase 6 — Split deploy hardening (completed)
 
-- Production env examples, `wss` URL, single-worker note for in-memory state.
+- Production env examples, `wss` URL, single-worker note for in-memory state — see `frontend/.env.example` and `backend/.env.example`.
 - Optional: simple proxy snippet (if API behind same domain path in future) — only if you pivot; split hosting means keep CORS list explicit.
 
 ---
