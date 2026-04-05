@@ -62,3 +62,11 @@ export function patchBrakeLights(body: BrakeLightsPatch): Promise<VehicleState> 
 export function patchPaint(body: PaintPatch): Promise<VehicleState> {
   return patchJson<VehicleState>('/api/vehicle/paint', body)
 }
+
+export async function postPaintCycle(): Promise<VehicleState> {
+  const res = await fetch(`${requireApiBase()}/api/vehicle/paint/cycle`, {
+    method: 'POST',
+    headers: { Accept: 'application/json' },
+  })
+  return parseJson<VehicleState>(res)
+}

@@ -38,7 +38,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins(),
     allow_credentials=False,
-    allow_methods=["GET", "PATCH", "OPTIONS"],
+    allow_methods=["GET", "PATCH", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -70,6 +70,13 @@ async def patch_brake_lights(body: BrakeLightsPatch) -> VehicleState:
 @app.patch("/api/vehicle/paint", response_model=VehicleState)
 async def patch_paint(body: PaintPatch) -> VehicleState:
     state = store.patch_paint(body)
+    await manager.broadcast_vehicle_state(state)
+    return state
+
+
+@app.post("/api/vehicle/paint/cycle", response_model=VehicleState)
+async def post_paint_cycle() -> VehicleState:
+    state = store.cycle_paint()
     await manager.broadcast_vehicle_state(state)
     return state
 
