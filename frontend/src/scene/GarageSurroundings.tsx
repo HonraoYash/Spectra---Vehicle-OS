@@ -13,34 +13,54 @@ export function GarageSurroundings({ box }: GarageSurroundingsProps) {
     const center = box.getCenter(new Vector3())
     const min = box.min
 
+    /** Inner face of every wall is exactly this far from the car center in XZ — square room */
+    const clearance = Math.max(size.x, size.z) * 0.52 + 5.2
+    const wallThick = 0.3
+    /** Footprint: inner box is square (2×clearance); walls sit outside that */
+    const wallDepth = 2 * clearance + 2 * wallThick
+
     const floorY = min.y - 1.8
-    const roomH = 14
+    const roomH = 3
     const ceilingY = floorY + roomH
 
-    const platTop = min.y - 0.07
-    const platCy = platTop - 0.09
+    const platTop = min.y - 0.05
+    const platCy = platTop - 0.59
     const platRadius = Math.max(size.x, size.z) * 0.74
 
-    const halfW = 20        // left/right — symmetric around center.x
-    const halfD = 20        // front/back — symmetric around center.z
-    const roomDepth = halfD * 2
+    // Wall centers: inner face at center ± clearance
+    const backZ = center.z - clearance - wallThick * 0.5
+    const frontZ = center.z + clearance + wallThick * 0.5
+    const leftX = center.x - clearance - wallThick * 0.5
+    const rightX = center.x + clearance + wallThick * 0.5
+
     const midZ = center.z
-    const backZ = center.z - halfD    // exactly halfD behind center
-    const frontZ = center.z + halfD   // exactly halfD in front of center
-    const wallThick = 0.3
-    const sideX = halfW + wallThick * 0.5
+    const cx = center.x
 
     const gridCount = 9
-    const gridHalfW = halfW * 1.6
-    const gridDepth = roomDepth * 0.85
+    const gridHalfW = clearance * 1.55
+    const gridDepth = wallDepth * 0.85
 
     return {
-      cx: center.x, cy: center.y, cz: center.z,
-      floorY, roomH, ceilingY,
-      platRadius, platTop, platCy,
-      halfW, roomDepth, midZ, backZ, frontZ,
-      wallThick, sideX,
-      gridCount, gridHalfW, gridDepth,
+      cx,
+      cy: center.y,
+      cz: center.z,
+      clearance,
+      wallThick,
+      wallDepth,
+      floorY,
+      roomH,
+      ceilingY,
+      platRadius,
+      platTop,
+      platCy,
+      backZ,
+      frontZ,
+      leftX,
+      rightX,
+      midZ,
+      gridCount,
+      gridHalfW,
+      gridDepth,
       size,
     }
   }, [box])
@@ -55,18 +75,21 @@ export function GarageSurroundings({ box }: GarageSurroundingsProps) {
     return L.midZ + t * L.gridDepth
   })
 
+  /** One shared material — identical albedo/roughness on every wall */
   const wallMat = { color: '#2a2d34', roughness: 0.82, metalness: 0.16 }
+
+  const stripXOffsets = [-L.clearance * 0.55, -L.clearance * 0.2, L.clearance * 0.2, L.clearance * 0.55]
+  const stripZOffsets = [-L.clearance * 0.55, -L.clearance * 0.2, L.clearance * 0.2, L.clearance * 0.55]
 
   return (
     <group>
-
       {/* ── FLOOR ── */}
       <mesh rotation={ROT_FLAT} position={[L.cx, L.floorY, L.midZ]} receiveShadow castShadow={false}>
-        <planeGeometry args={[L.halfW * 2 + 8, L.roomDepth + 10]} />
+        <planeGeometry args={[L.wallDepth + 10, L.wallDepth + 10]} />
         <meshStandardMaterial color="#FFFFFF" roughness={0.05} metalness={0.92} />
       </mesh>
       <mesh rotation={ROT_FLAT} position={[L.cx, L.floorY + 0.005, L.midZ]} receiveShadow={false} castShadow={false}>
-        <planeGeometry args={[L.halfW * 1.8, L.roomDepth + 4]} />
+        <planeGeometry args={[L.wallDepth + 2, L.wallDepth + 2]} />
         <meshStandardMaterial color="#FFFFFF" roughness={0.02} metalness={0.96} transparent opacity={0.4} depthWrite={false} />
       </mesh>
 
@@ -106,85 +129,75 @@ export function GarageSurroundings({ box }: GarageSurroundingsProps) {
         <meshStandardMaterial color="#000c18" emissive="#004466" emissiveIntensity={0.7} transparent opacity={0.75} depthWrite={false} toneMapped={false} />
       </mesh>
 
-      {/* ══════════════════════════════════════════
-          BACK WALL + accent strips
-      ══════════════════════════════════════════ */}
+      {/* ── BACK WALL (inner face −Z) ── */}
       <mesh position={[L.cx, L.floorY + L.roomH * 0.5, L.backZ]} receiveShadow castShadow={false}>
-        <boxGeometry args={[L.halfW * 2 + 1.5, L.roomH, L.wallThick]} />
+        <boxGeometry args={[L.wallDepth, L.roomH, L.wallThick]} />
         <meshStandardMaterial {...wallMat} />
       </mesh>
-      {[-L.halfW * 0.3, -L.halfW * 0.1, L.halfW * 0.1, L.halfW * 0.3].map((ox, i) => (
-        <mesh key={`bstrip-${i}`} position={[L.cx + ox, L.floorY + L.roomH * 0.5, L.backZ + L.wallThick + 0.01]} castShadow={false} receiveShadow={false}>
+      {stripXOffsets.map((ox, i) => (
+        <mesh key={`bstrip-${i}`} position={[L.cx + ox, L.floorY + L.roomH * 0.5, L.backZ + L.wallThick * 0.5 + 0.015]} castShadow={false} receiveShadow={false}>
           <boxGeometry args={[0.05, L.roomH * 0.76, 0.04]} />
           <meshStandardMaterial color="#010408" emissive="#004488" emissiveIntensity={0.1} toneMapped={false} />
         </mesh>
       ))}
 
-      {/* ══════════════════════════════════════════
-          FRONT WALL + accent strips
-      ══════════════════════════════════════════ */}
+      {/* ── FRONT WALL (inner face +Z) ── */}
       <mesh position={[L.cx, L.floorY + L.roomH * 0.5, L.frontZ]} receiveShadow castShadow={false}>
-        <boxGeometry args={[L.halfW * 2 + 1.5, L.roomH, L.wallThick]} />
+        <boxGeometry args={[L.wallDepth, L.roomH, L.wallThick]} />
         <meshStandardMaterial {...wallMat} />
       </mesh>
-      {[-L.halfW * 0.3, -L.halfW * 0.1, L.halfW * 0.1, L.halfW * 0.3].map((ox, i) => (
-        <mesh key={`fstrip-${i}`} position={[L.cx + ox, L.floorY + L.roomH * 0.5, L.frontZ - L.wallThick - 0.01]} castShadow={false} receiveShadow={false}>
+      {stripXOffsets.map((ox, i) => (
+        <mesh key={`fstrip-${i}`} position={[L.cx + ox, L.floorY + L.roomH * 0.5, L.frontZ - L.wallThick * 0.5 - 0.015]} castShadow={false} receiveShadow={false}>
           <boxGeometry args={[0.05, L.roomH * 0.76, 0.04]} />
           <meshStandardMaterial color="#010408" emissive="#004488" emissiveIntensity={0.1} toneMapped={false} />
         </mesh>
       ))}
 
-      {/* ══════════════════════════════════════════
-          SIDE WALLS + accent strips (same as back wall)
-      ══════════════════════════════════════════ */}
-      {([-1, 1] as const).map((side) => {
-        const stripOffsets = [-L.roomDepth * 0.3, -L.roomDepth * 0.1, L.roomDepth * 0.1, L.roomDepth * 0.3]
-        const stripX = L.cx + side * (L.sideX - L.wallThick * 0.5 - 0.025)
-        return (
-          <group key={`sw-${side}`}>
-            {/* Wall panel */}
-            <mesh position={[L.cx + side * L.sideX, L.floorY + L.roomH * 0.5, L.midZ]} receiveShadow castShadow={false}>
-              <boxGeometry args={[L.wallThick, L.roomH, L.roomDepth + 2]} />
-              <meshStandardMaterial {...wallMat} />
-            </mesh>
-
-            {/* Vertical accent strips — same as back wall */}
-            {stripOffsets.map((oz, i) => (
-              <mesh key={`sstrip-${i}`} position={[stripX, L.floorY + L.roomH * 0.5, L.midZ + oz]} castShadow={false} receiveShadow={false}>
-                <boxGeometry args={[0.04, L.roomH * 0.76, 0.05]} />
-                <meshStandardMaterial color="#010408" emissive="#004488" emissiveIntensity={0.1} toneMapped={false} />
-              </mesh>
-            ))}
-
-            {/* Base trim */}
-            <mesh position={[stripX, L.floorY + 0.05, L.midZ]} castShadow={false} receiveShadow={false}>
-              <boxGeometry args={[0.03, 0.08, L.roomDepth * 0.86]} />
-              <meshStandardMaterial color="#000810" emissive="#006699" emissiveIntensity={0.28} toneMapped={false} />
-            </mesh>
-          </group>
-        )
-      })}
-
-      {/* ── CEILING ── */}
-      <mesh position={[L.cx, L.ceilingY, L.midZ]} receiveShadow castShadow={false}>
-        <boxGeometry args={[L.halfW * 2 + 1.5, 0.25, L.roomDepth + 2]} />
-        <meshStandardMaterial color="#1e2128" roughness={0.92} metalness={0.08} />
-      </mesh>
-
-      {/* Ceiling light bars */}
-      {[L.midZ + L.roomDepth * 0.07, L.midZ - L.roomDepth * 0.09, L.midZ - L.roomDepth * 0.23].map((z, i) => (
-        <group key={`cb-${i}`}>
-          <mesh position={[L.cx, L.ceilingY - 0.11, z]} castShadow={false} receiveShadow={false}>
-            <boxGeometry args={[L.halfW * 1.5, 0.04, 0.25]} />
-            <meshStandardMaterial color="#0a1828" emissive="#50aaff" emissiveIntensity={i === 0 ? 1.2 : 0.7} roughness={0.4} metalness={0.55} toneMapped={false} />
+      {/* ── LEFT / RIGHT WALLS (inner faces ±X), same depth as back/front width ── */}
+      {([
+        { side: -1 as const, wallX: L.leftX, stripFace: 1 },
+        { side: 1 as const, wallX: L.rightX, stripFace: -1 },
+      ] as const).map(({ side, wallX, stripFace }) => (
+        <group key={`sw-${side}`}>
+          <mesh position={[wallX, L.floorY + L.roomH * 0.5, L.midZ]} receiveShadow castShadow={false}>
+            <boxGeometry args={[L.wallThick, L.roomH, L.wallDepth]} />
+            <meshStandardMaterial {...wallMat} />
           </mesh>
-          <mesh position={[L.cx, L.ceilingY - 0.065, z]} castShadow={false} receiveShadow={false}>
-            <boxGeometry args={[L.halfW * 1.55, 0.055, 0.35]} />
-            <meshStandardMaterial color="#060a12" roughness={0.9} metalness={0.3} />
+          {stripZOffsets.map((oz, i) => (
+            <mesh key={`sstrip-${i}`} position={[wallX + stripFace * (L.wallThick * 0.5 + 0.02), L.floorY + L.roomH * 0.5, L.midZ + oz]} castShadow={false} receiveShadow={false}>
+              <boxGeometry args={[0.04, L.roomH * 0.76, 0.05]} />
+              <meshStandardMaterial color="#010408" emissive="#004488" emissiveIntensity={0.1} toneMapped={false} />
+            </mesh>
+          ))}
+          <mesh position={[wallX + stripFace * (L.wallThick * 0.5 + 0.02), L.floorY + 0.05, L.midZ]} castShadow={false} receiveShadow={false}>
+            <boxGeometry args={[0.03, 0.08, L.wallDepth * 0.86]} />
+            <meshStandardMaterial color="#000810" emissive="#006699" emissiveIntensity={0.28} toneMapped={false} />
           </mesh>
         </group>
       ))}
 
+      {/* ── CEILING ── */}
+      <mesh position={[L.cx, L.ceilingY, L.midZ]} receiveShadow castShadow={false}>
+        <boxGeometry args={[L.wallDepth + 1, 0.25, L.wallDepth + 1]} />
+        <meshStandardMaterial color="#1e2128" roughness={0.92} metalness={0.08} />
+      </mesh>
+
+      {/* Ceiling bars — same emissive on all three */}
+      {[0, 1, 2].map((i) => {
+        const z = L.midZ + (i - 1) * (L.clearance * 0.42)
+        return (
+          <group key={`cb-${i}`}>
+            <mesh position={[L.cx, L.ceilingY - 0.11, z]} castShadow={false} receiveShadow={false}>
+              <boxGeometry args={[L.clearance * 1.75, 0.04, 0.25]} />
+              <meshStandardMaterial color="#0a1828" emissive="#50aaff" emissiveIntensity={0.85} roughness={0.4} metalness={0.55} toneMapped={false} />
+            </mesh>
+            <mesh position={[L.cx, L.ceilingY - 0.065, z]} castShadow={false} receiveShadow={false}>
+              <boxGeometry args={[L.clearance * 1.78, 0.055, 0.35]} />
+              <meshStandardMaterial color="#060a12" roughness={0.9} metalness={0.3} />
+            </mesh>
+          </group>
+        )
+      })}
     </group>
   )
 }

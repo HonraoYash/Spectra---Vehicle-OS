@@ -49,29 +49,33 @@ export function StageLighting({ aim }: StageLightingProps = {}) {
         castShadow
       />
 
-      {/* Warm key — top-right fills roof and door panels */}
-      <directionalLight
-        position={[ax + 7, ay + 9, az + 8]}
-        color="#ffe8c8"
-        intensity={1.4}
-        castShadow={false}
-      />
+      {/* Symmetric wall washes — same intensity & neutral color from all four sides */}
+      <directionalLight position={[ax - 22, ay + 7, az]} intensity={0.5} color="#dde2eb" castShadow={false}>
+        <object3D position={[ax, ay + 1.2, az]} attach="target" />
+      </directionalLight>
+      <directionalLight position={[ax + 22, ay + 7, az]} intensity={0.5} color="#dde2eb" castShadow={false}>
+        <object3D position={[ax, ay + 1.2, az]} attach="target" />
+      </directionalLight>
+      <directionalLight position={[ax, ay + 7, az - 22]} intensity={0.5} color="#dde2eb" castShadow={false}>
+        <object3D position={[ax, ay + 1.2, az]} attach="target" />
+      </directionalLight>
+      <directionalLight position={[ax, ay + 7, az + 22]} intensity={0.5} color="#dde2eb" castShadow={false}>
+        <object3D position={[ax, ay + 1.2, az]} attach="target" />
+      </directionalLight>
 
-      {/* Cool blue rim — NFS edge highlight from rear-left */}
-      <directionalLight
-        position={[ax - 7, ay + 8, az - 7]}
-        color="#88ccff"
-        intensity={0.9}
-        castShadow={false}
-      />
-
-      {/* Front fill — lifts bumper */}
-      <directionalLight
-        position={[ax, ay + 2, az + 10]}
-        color="#ffffff"
-        intensity={0.2}
-        castShadow={false}
-      />
+      {/* Balanced diagonal accents — warm + cool in opposing corners so no single wall is tinted */}
+      <directionalLight position={[ax + 9, ay + 11, az + 9]} color="#f0e8dc" intensity={0.35} castShadow={false}>
+        <object3D position={[ax, ay, az]} attach="target" />
+      </directionalLight>
+      <directionalLight position={[ax - 9, ay + 11, az - 9]} color="#f0e8dc" intensity={0.35} castShadow={false}>
+        <object3D position={[ax, ay, az]} attach="target" />
+      </directionalLight>
+      <directionalLight position={[ax - 9, ay + 11, az + 9]} color="#dce8f4" intensity={0.35} castShadow={false}>
+        <object3D position={[ax, ay, az]} attach="target" />
+      </directionalLight>
+      <directionalLight position={[ax + 9, ay + 11, az - 9]} color="#dce8f4" intensity={0.35} castShadow={false}>
+        <object3D position={[ax, ay, az]} attach="target" />
+      </directionalLight>
     </>
   )
 }
