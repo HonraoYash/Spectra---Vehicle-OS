@@ -2,6 +2,52 @@
 
 **Jarvis-style 3D vehicle visualization** — a split-hosted app with a React + Three.js frontend and a FastAPI backend. The UI drives vehicle lighting and paint through REST; every mutation is broadcast over WebSockets so all open tabs stay in sync with a shared in-memory state.
 
+> **Built live, on camera, with AI — to show how modern engineers actually ship.**
+ 
+This project was built as a take-home challenge for Applied Intuition's AI Engineering role. The goal wasn't just to build a 3D vehicle visualization tool — it was to demonstrate **AI-native development in action**: using Cursor and Claude not as autocomplete, but as a core part of the engineering workflow, narrated and recorded throughout.
+ 
+---
+ 
+## 🔴 Live Demo
+ 
+| | URL |
+|---|---|
+| **Frontend** | [spectra-vehicle-os.vercel.app](https://spectra-vehicle-os.vercel.app) |
+| **Backend API** | [spectra-vehicle-os.onrender.com](https://spectra-vehicle-os.onrender.com) |
+| **API Health** | [/api/health](https://spectra-vehicle-os.onrender.com/api/health) |
+ 
+> The backend is hosted on Render's free tier and kept alive 24/7 via **UptimeRobot** — a free uptime monitor that pings `/api/health` every 5 minutes, preventing Render's default spin-down behavior. No paid infrastructure required.
+ 
+---
+ 
+## 🤖 AI Coding Tool Proficiency — The Real Point of This Project
+ 
+Most engineers say they "use AI tools." This project shows what that actually looks like.
+ 
+The entire development was **recorded as a screenshare** with live narration — every prompt, every decision, every iteration. The recording demonstrates how I use Cursor and Claude not just to write boilerplate, but to architect, debug, and ship production-quality code fast.
+ 
+### Cursor Tips & Tricks Used During This Build
+ 
+These are the techniques I explicitly demonstrated and narrated in the recording:
+ 
+- **Plan Mode first** — never jump straight into code. Use Cursor's Plan mode to architect the full feature before a single line is written. This saves massive rework.
+- **New chat for new tasks** — keep context windows lean. Start fresh conversations (`Cmd+N`) for each new feature so the model isn't dragging stale context.
+- **@ to reference specific files** — give Cursor surgical context by referencing exactly the files relevant to the task, not the whole codebase.
+- **`.cursorrules` / `.commands` folder** — store reusable prompting conventions and project-specific rules so every new chat starts with the right context automatically.
+- **`/summarize` to compress chat history** — when a conversation gets long, summarize it before continuing to keep the context window efficient.
+- **Watch the context window gauge** — treat it like a fuel gauge. When it's high, start a new chat. Low context = better, more focused responses.
+- **Attach images to give visual context** — screenshot the UI, paste errors, share diagrams. Visual context dramatically improves Cursor's output quality.
+- **Give errors directly to Cursor** — don't paraphrase. Paste the full stack trace and let the model diagnose.
+- **Go back in time** — use Cursor's conversation history to revisit earlier approaches when a direction isn't working.
+- **Use the undo button** — Cursor's checkpoint system lets you revert agent changes cleanly. Use it confidently; it's not destructive.
+- **Create PRs from the `.commands` file** — automate repetitive git workflows.
+- **Be specific about exactly what you want** — vague prompts get vague code. Precise, contextual prompts with constraints get production-ready output.
+- **Commit after every feature** — treat each working feature as a checkpoint. Small commits make rollback painless.
+- **Give the app screenshot to Cursor** — when working on UI, screenshot the current state and paste it in. "Make it look more like this" with a visual is more effective than describing it in words.
+- **Give as much additional context as possible** — Cursor performs best when it knows the stack, the constraints, the existing code patterns, and the end goal. Front-load that context.
+ 
+---
+
 ## Features
 
 - **Interactive 3D stage** — GLB vehicle loaded with React Three Fiber, cinematic lighting, tone mapping, orbit controls, and idle auto-rotate after periods without interaction.
