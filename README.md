@@ -111,7 +111,8 @@ Copy from `frontend/.env.example`. Vite inlines `VITE_*` at **build** time — c
 
 | Variable | Description |
 | -------- | ----------- |
-| `CORS_ORIGINS` | Comma-separated browser origins allowed for REST and related checks (e.g. `http://localhost:5173,http://127.0.0.1:5173`). Default in code: `http://localhost:5173`. |
+| `CORS_ORIGINS` | Comma-separated **frontend** origins (e.g. your Vercel URL), not the API host. Default: local Vite origins. No trailing slashes. |
+| `CORS_ORIGIN_REGEX` | Optional. Regex for extra origins (e.g. `https://.*\.vercel\.app` so Preview deploys work without listing each URL). |
 
 Copy from `backend/.env.example`.
 
@@ -184,6 +185,21 @@ Commercial GLBs often have inconsistent naming; adjust bindings or the manifest 
 
 Vercel only hosts the **static** Vite build. Your FastAPI app must already be live on another URL; the browser will call that URL for REST and WebSocket.
 
+#### Checklist: Vercel (frontend) + Render (API)
+
+**Recommended: same-origin REST (proxy)** — avoids browser CORS and many extensions that block cross-site requests to `onrender.com` while still allowing `wss://` to Render.
+
+1. **[`frontend/vercel.json`](frontend/vercel.json)** — `rewrites` send `/api/:path*` to your Render service. Update the `destination` host if your Render URL changes.
+2. **Vercel → Environment Variables** (then redeploy):  
+   - **Delete** `VITE_API_BASE_URL` (and `VITE_API_URL`) so the app uses relative `/api/...` on your Vercel domain.  
+   - **Keep** `VITE_WS_URL=wss://YOUR-SERVICE.onrender.com/ws/vehicle`  
+   - **Remove** `CORS_ORIGINS` from Vercel — it does nothing for the browser and belongs only on the backend.
+3. **Render → Environment**: keep `CORS_ORIGINS=https://your-app.vercel.app` (no trailing slash) so the **WebSocket** handshake from the Vercel origin is allowed. Optional: `CORS_ORIGIN_REGEX=https://.*\.vercel\.app` for previews.
+
+**Alternative: direct REST to Render** — set `VITE_API_BASE_URL=https://your-service.onrender.com` and do **not** rely on `/api` rewrites; you must get CORS perfect on Render (and watch for blockers). Trailing slashes on env values are stripped in app code, but use clean values in dashboards anyway.
+
+If **WS** works but **REST ERR** persists with direct mode, try **proxy mode** (step 1–2) or test in a clean profile without ad blockers.
+
 #### Environment variables on Vercel
 
 Add **at least one** of these in the Vercel project → **Settings** → **Environment Variables** (apply to *Production* and *Preview* as needed):
@@ -234,7 +250,7 @@ If you leave Root Directory empty, add a root `vercel.json` with `installCommand
 | ------- | ---------------- |
 | Frontend throws about API / WebSocket env | Set `VITE_API_BASE_URL` or `VITE_API_URL`; optionally `VITE_WS_URL`. Locally: `frontend/.env`. On Vercel: Project → Environment Variables, then redeploy. |
 | REST works but WebSocket never connects | Wrong explicit `VITE_WS_URL`, firewall, or proxy blocking Upgrade; for HTTPS sites use `https://` API base so `wss://` can be derived, or set `VITE_WS_URL` to a working `wss://` URL. |
-| CORS errors on fetch | Add your exact dev origin (including `127.0.0.1` vs `localhost`) to `CORS_ORIGINS`. |
+| CORS errors on fetch (`REST ERR` on Vercel) | On **Render**, set `CORS_ORIGINS` to your **Vercel site origin** (copy from the browser: `https://your-project.vercel.app` — no path, no trailing slash). Do **not** put your Render API URL there. Optional: `CORS_ORIGIN_REGEX=https://.*\.vercel\.app` for previews. Redeploy the API after changing env. |
 | Paint or lights look wrong | Mesh names changed in the GLB; re-run `inspect_glb.py` and update `vehicleBindings.ts` / manifest. |
 | State differs per tab after toggle | Multiple backend workers or instances; use a single worker or externalize state. |
 

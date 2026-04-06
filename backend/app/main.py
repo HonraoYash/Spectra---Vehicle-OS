@@ -19,8 +19,27 @@ from app.state import VehicleStore
 
 
 def _cors_origins() -> list[str]:
-    raw = os.environ.get("CORS_ORIGINS", "https://spectra-vehicle-os.onrender.com/")
-    return [o.strip() for o in raw.split(",") if o.strip()]
+    """Browser origins allowed for cross-origin REST (and related checks).
+
+    Must list the *frontend* origins (e.g. Vercel), not the API URL on Render.
+    Trailing slashes are stripped because browsers send Origin without a path.
+    """
+    raw = os.environ.get(
+        "CORS_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    )
+    out: list[str] = []
+    for part in raw.split(","):
+        o = part.strip().rstrip("/")
+        if o:
+            out.append(o)
+    return out
+
+
+def _cors_origin_regex() -> str | None:
+    """Optional regex for previews (e.g. ``https://.*\\.vercel\\.app`` for Vercel preview hosts)."""
+    r = os.environ.get("CORS_ORIGIN_REGEX", "").strip()
+    return r or None
 
 
 store = VehicleStore()
@@ -37,13 +56,14 @@ app = FastAPI(title="Spectra Vehicle API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins(),
+    allow_origin_regex=_cors_origin_regex(),
     allow_credentials=False,
     allow_methods=["GET", "PATCH", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
 
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])
 def health() -> dict[str, str]:
     return {"status": "ok"}
 

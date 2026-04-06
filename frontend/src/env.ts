@@ -6,29 +6,33 @@ function trimTrailingSlash(s: string): string {
 
 /**
  * REST API origin (no trailing slash).
- * Prefer `VITE_API_BASE_URL`; `VITE_API_URL` is an alias for hosts like Vercel where you set one “API URL” var.
+ * If unset, uses same-origin relative URLs (`/api/...`) — use with Vercel rewrites or the Vite dev proxy.
  */
 export function getApiBase(): string {
   const raw =
     import.meta.env.VITE_API_BASE_URL?.trim() ||
     import.meta.env.VITE_API_URL?.trim()
-  if (!raw) {
-    throw new Error('Set VITE_API_BASE_URL or VITE_API_URL (REST origin, no trailing slash)')
-  }
+  if (!raw) return ''
   return trimTrailingSlash(raw)
 }
 
 /**
- * WebSocket URL for vehicle state. If `VITE_WS_URL` is unset, derives
- * `ws(s)://<host>/ws/vehicle` from the API origin (same host as REST, path ignored).
- * Override `VITE_WS_URL` when WS is on a different host or path than this rule.
+ * WebSocket URL for vehicle state.
+ * - Prefer explicit `VITE_WS_URL` (required when REST is same-origin via a proxy).
+ * - Otherwise derives `ws(s)://<api-host>/ws/vehicle` from `VITE_API_BASE_URL` / `VITE_API_URL`.
  */
 export function getVehicleWsUrl(): string {
   const explicit = import.meta.env.VITE_WS_URL?.trim()
   if (explicit) return explicit
 
-  const base = getApiBase()
-  const u = new URL(base)
+  const apiOrigin =
+    import.meta.env.VITE_API_BASE_URL?.trim() || import.meta.env.VITE_API_URL?.trim()
+  if (!apiOrigin) {
+    throw new Error(
+      'Set VITE_WS_URL (e.g. wss://your-api.onrender.com/ws/vehicle) when REST uses same-origin /api',
+    )
+  }
+  const u = new URL(trimTrailingSlash(apiOrigin))
   const proto = u.protocol === 'https:' ? 'wss:' : 'ws:'
   return `${proto}//${u.host}/ws/vehicle`
 }
